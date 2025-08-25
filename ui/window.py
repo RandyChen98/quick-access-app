@@ -68,6 +68,7 @@ class MainWindow:
         self.browser_launcher = browser_launcher
         self.clipboard_reader = clipboard_reader
         self.on_close_callback = None
+        self.on_card_changed_callback = None
         
         self.root = tk.Tk()
         self.root.title("Quick Access App")
@@ -91,7 +92,6 @@ class MainWindow:
         toolbar.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         
         ttk.Button(toolbar, text="Add Card", command=self.add_card).pack(side=tk.LEFT, padx=5)
-        ttk.Button(toolbar, text="Edit Card", command=self.edit_card).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text="Delete Card", command=self.delete_card).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text="Refresh", command=self.refresh_cards).pack(side=tk.LEFT, padx=5)
         
@@ -174,6 +174,8 @@ class MainWindow:
             name, url, hotkey = dialog.result
             self.card_manager.add_card(name, url, hotkey)
             self.refresh_cards()
+            if self.on_card_changed_callback:
+                self.on_card_changed_callback()
     
     def edit_card(self):
         cards = self.card_manager.get_all_cards()
@@ -198,6 +200,8 @@ class MainWindow:
                         name, url, hotkey = dialog.result
                         self.card_manager.update_card(card_id, name, url, hotkey)
                         self.refresh_cards()
+                        if self.on_card_changed_callback:
+                            self.on_card_changed_callback()
                 else:
                     messagebox.showerror("Error", "Card not found")
             except ValueError:
@@ -212,6 +216,8 @@ class MainWindow:
             name, url, hotkey = dialog.result
             self.card_manager.update_card(card['id'], name, url, hotkey)
             self.refresh_cards()
+            if self.on_card_changed_callback:
+                self.on_card_changed_callback()
     
     def show_card_context_menu(self, event, card):
         context_menu = tk.Menu(self.root, tearoff=0)
@@ -228,6 +234,8 @@ class MainWindow:
         if messagebox.askyesno("Confirm", f"Delete card '{card['name']}'?"):
             if self.card_manager.delete_card(card['id']):
                 self.refresh_cards()
+                if self.on_card_changed_callback:
+                    self.on_card_changed_callback()
             else:
                 messagebox.showerror("Error", "Card not found")
     
@@ -247,6 +255,8 @@ class MainWindow:
                 if messagebox.askyesno("Confirm", f"Delete card {card_id}?"):
                     if self.card_manager.delete_card(card_id):
                         self.refresh_cards()
+                        if self.on_card_changed_callback:
+                            self.on_card_changed_callback()
                     else:
                         messagebox.showerror("Error", "Card not found")
             except ValueError:
@@ -254,6 +264,9 @@ class MainWindow:
     
     def set_on_close_callback(self, callback: Callable):
         self.on_close_callback = callback
+    
+    def set_on_card_changed_callback(self, callback: Callable):
+        self.on_card_changed_callback = callback
     
     def on_window_close(self):
         if self.on_close_callback:

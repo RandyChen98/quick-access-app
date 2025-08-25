@@ -50,7 +50,7 @@ class QuickAccessApp:
             item('Exit', self.quit_app)
         )
         
-        self.tray_icon = pystray.Icon("QuickAccess", image, "Quick Access App", menu)
+        self.tray_icon = pystray.Icon("QuickAccess", image, "Quick Access App", menu, default_action=self.show_window)
     
     def setup_hotkeys(self):
         if self.hotkeys_registered:
@@ -91,6 +91,7 @@ class QuickAccessApp:
                     self.clipboard_reader
                 )
                 self.main_window.set_on_close_callback(self.hide_window)
+                self.main_window.set_on_card_changed_callback(self.refresh_hotkeys)
             
             self.main_window.show()
             self.main_window.refresh_cards()
