@@ -45,6 +45,10 @@ class TestClipboardReader(unittest.TestCase):
         
         self.assertEqual(first_thread, second_thread)
         self.assertTrue(self.clipboard_reader.monitoring)
+    
+    def test_try_get_selected_text(self):
+        result = self.clipboard_reader.try_get_selected_text()
+        self.assertIsInstance(result, str)
 
 
 if __name__ == '__main__':

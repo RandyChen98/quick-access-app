@@ -1,6 +1,8 @@
 import pyperclip
 import threading
 import time
+import platform
+import subprocess
 
 
 class ClipboardReader:
@@ -18,11 +20,64 @@ class ClipboardReader:
             return ""
     
     def get_selected_content(self) -> str:
+        selected_text = self.try_get_selected_text()
+        if selected_text:
+            self.selected_content = selected_text
+            return selected_text
+        
         current_clipboard = self.get_clipboard_content()
         if current_clipboard != self.last_clipboard_content:
             self.selected_content = current_clipboard
             self.last_clipboard_content = current_clipboard
         return self.selected_content
+    
+    def try_get_selected_text(self) -> str:
+        try:
+            system = platform.system().lower()
+            
+            if system == "linux":
+                try:
+                    result = subprocess.run(['xsel', '-o'], capture_output=True, text=True, timeout=1)
+                    if result.returncode == 0 and result.stdout.strip():
+                        return result.stdout.strip()
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    pass
+                
+                try:
+                    result = subprocess.run(['xclip', '-o'], capture_output=True, text=True, timeout=1)
+                    if result.returncode == 0 and result.stdout.strip():
+                        return result.stdout.strip()
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    pass
+            
+            elif system == "darwin":
+                try:
+                    result = subprocess.run(['pbpaste'], capture_output=True, text=True, timeout=1)
+                    if result.returncode == 0 and result.stdout.strip():
+                        clipboard_content = result.stdout.strip()
+                        if clipboard_content != self.last_clipboard_content:
+                            return clipboard_content
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    pass
+            
+            elif system == "windows":
+                try:
+                    import win32clipboard
+                    import win32con
+                    win32clipboard.OpenClipboard()
+                    data = win32clipboard.GetClipboardData(win32con.CF_TEXT)
+                    win32clipboard.CloseClipboard()
+                    if data and data.strip() != self.last_clipboard_content:
+                        return data.strip()
+                except ImportError:
+                    pass
+                except Exception:
+                    pass
+            
+        except Exception:
+            pass
+        
+        return ""
     
     def start_monitoring(self):
         if not self.monitoring:
