@@ -62,8 +62,8 @@ Cards can contain the `{content}` placeholder in their URLs:
 ### Example Use Case
 
 1. Create a card with:
-   - Name: "GitHub Search"
-   - URL: `https://github.com/search?q={content}`
+   - Name: "GitHub PR Search"
+   - URL: `https://github.com/pulls?q=is%3Apr+{content}`
    - Hotkey: `ctrl+shift+g`
 
 2. Select code in VS Code
