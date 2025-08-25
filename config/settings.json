@@ -1,0 +1,16 @@
+{
+  "cards": [
+    {
+      "id": 1,
+      "name": "Google Search",
+      "url": "https://www.google.com/search?q={content}",
+      "hotkey": "ctrl+shift+g"
+    },
+    {
+      "id": 2,
+      "name": "GitHub Search",
+      "url": "https://github.com/search?q={content}",
+      "hotkey": "ctrl+shift+h"
+    }
+  ]
+}
