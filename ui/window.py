@@ -140,13 +140,23 @@ class MainWindow:
                                    font=('Arial', 9), foreground="gray")
             hotkey_label.grid(row=2, column=0, sticky="w", padx=10, pady=(0, 5))
         
-        button = ttk.Button(card_frame, text="Launch", 
-                           command=lambda c=card: self.launch_card(c))
-        button.grid(row=0, column=1, rowspan=3, padx=10, pady=5)
+        button_frame = ttk.Frame(card_frame)
+        button_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=5)
+        
+        launch_button = ttk.Button(button_frame, text="Launch", 
+                                 command=lambda c=card: self.launch_card(c))
+        launch_button.pack(side=tk.TOP, pady=1)
+        
+        edit_button = ttk.Button(button_frame, text="Edit", 
+                               command=lambda c=card: self.edit_specific_card(c))
+        edit_button.pack(side=tk.TOP, pady=1)
         
         card_frame.bind("<Button-1>", lambda e, c=card: self.launch_card(c))
+        card_frame.bind("<Button-3>", lambda e, c=card: self.show_card_context_menu(e, c))
         name_label.bind("<Button-1>", lambda e, c=card: self.launch_card(c))
+        name_label.bind("<Button-3>", lambda e, c=card: self.show_card_context_menu(e, c))
         url_label.bind("<Button-1>", lambda e, c=card: self.launch_card(c))
+        url_label.bind("<Button-3>", lambda e, c=card: self.show_card_context_menu(e, c))
     
     def launch_card(self, card):
         def launch_async():
@@ -192,6 +202,34 @@ class MainWindow:
                     messagebox.showerror("Error", "Card not found")
             except ValueError:
                 messagebox.showerror("Error", "Invalid card ID")
+    
+    def edit_specific_card(self, card):
+        dialog = CardDialog(self.root, "Edit Card", 
+                          card['name'], card['url'], card.get('hotkey', ''))
+        self.root.wait_window(dialog.dialog)
+        
+        if dialog.result:
+            name, url, hotkey = dialog.result
+            self.card_manager.update_card(card['id'], name, url, hotkey)
+            self.refresh_cards()
+    
+    def show_card_context_menu(self, event, card):
+        context_menu = tk.Menu(self.root, tearoff=0)
+        context_menu.add_command(label="Launch", command=lambda: self.launch_card(card))
+        context_menu.add_command(label="Edit", command=lambda: self.edit_specific_card(card))
+        context_menu.add_command(label="Delete", command=lambda: self.delete_specific_card(card))
+        
+        try:
+            context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            context_menu.grab_release()
+    
+    def delete_specific_card(self, card):
+        if messagebox.askyesno("Confirm", f"Delete card '{card['name']}'?"):
+            if self.card_manager.delete_card(card['id']):
+                self.refresh_cards()
+            else:
+                messagebox.showerror("Error", "Card not found")
     
     def delete_card(self):
         cards = self.card_manager.get_all_cards()

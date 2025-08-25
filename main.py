@@ -78,20 +78,28 @@ class QuickAccessApp:
             pass
     
     def launch_card_by_hotkey(self, card):
-        threading.Thread(target=lambda: self.browser_launcher.launch_card(card), daemon=True).start()
+        def launch_in_background():
+            self.browser_launcher.launch_card(card)
+        threading.Thread(target=launch_in_background, daemon=True).start()
     
     def show_window(self, icon=None, item=None):
-        if not self.main_window:
-            self.main_window = MainWindow(
-                self.card_manager, 
-                self.browser_launcher, 
-                self.clipboard_reader
-            )
-            self.main_window.set_on_close_callback(self.hide_window)
+        def create_window():
+            if not self.main_window:
+                self.main_window = MainWindow(
+                    self.card_manager, 
+                    self.browser_launcher, 
+                    self.clipboard_reader
+                )
+                self.main_window.set_on_close_callback(self.hide_window)
+            
+            self.main_window.show()
+            self.main_window.refresh_cards()
+            self.refresh_hotkeys()
         
-        self.main_window.show()
-        self.main_window.refresh_cards()
-        self.refresh_hotkeys()
+        if hasattr(self, 'root') and self.root:
+            self.root.after(0, create_window)
+        else:
+            create_window()
     
     def hide_window(self):
         if self.main_window:
@@ -125,11 +133,11 @@ class QuickAccessApp:
         if self.tray_icon:
             threading.Thread(target=self.tray_icon.run, daemon=True).start()
         
-        root = tk.Tk()
-        root.withdraw()
+        self.root = tk.Tk()
+        self.root.withdraw()
         
         try:
-            root.mainloop()
+            self.root.mainloop()
         except KeyboardInterrupt:
             self.quit_app()
 
